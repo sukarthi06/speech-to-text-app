@@ -1,0 +1,13 @@
+@if (soapNote(); as note) {
+  <div class="soap-note">
+    @for (section of sections; track section.key) {
+      <div class="soap-section">
+        <div class="soap-section__header">
+          <span class="soap-section__icon">{{ section.icon }}</span>
+          <h3 class="soap-section__label">{{ section.label }}</h3>
+        </div>
+        <p class="soap-section__content">{{ note[section.key] || '—' }}</p>
+      </div>
+    }
+  </div>
+}

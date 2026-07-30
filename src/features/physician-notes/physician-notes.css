@@ -1,0 +1,59 @@
+.soap-note {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  font-family: 'Inter', sans-serif;
+}
+
+.soap-note--empty {
+  align-items: center;
+  justify-content: center;
+  min-height: 8rem;
+  background: #f9fafb;
+}
+
+.soap-note__placeholder {
+  color: #9ca3af;
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+.soap-section {
+  padding: 1rem 1.25rem;
+  background: #f8fafc;
+  border-left: 3px solid #6366f1;
+  border-radius: 4px;
+}
+
+.soap-section__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.soap-section__icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.soap-section__label {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6366f1;
+}
+
+.soap-section__content {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: #1e293b;
+  white-space: pre-wrap;
+}

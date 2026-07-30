@@ -1,0 +1,50 @@
+<div class="container-fluid">
+  <div class="row vh-100">
+
+    <!-- Left -->
+    <div class="col-md-6 p-4 d-flex flex-column">
+      <h3>Audio Visualizer</h3>
+
+      <div class="border rounded p-3 flex-grow-1 d-flex align-items-center justify-content-center">
+        <app-audio-visualizer [analyser]="analyser()" />
+      </div>
+    </div>
+
+    <!-- Right -->
+    <div class="col-md-6 p-4 d-flex flex-column">
+      <h3>Transcript</h3>
+
+      <div class="border rounded p-3 flex-grow-1 overflow-auto">
+        <p>{{ transcript() }}</p>
+      </div>
+
+      <div class="mt-3 d-flex justify-content-end">
+        <button class="btn btn-success me-2" (click)="startAudio()">
+          Start
+        </button>
+
+        <button class="btn btn-danger" (click)="stopAudio()">
+          @if(isProcessingAudio()){
+            <span class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>
+            Processing...
+          }@else {
+            Stop
+          }
+        </button>
+      </div>
+    </div>
+
+  </div>
+  <div class="row">
+    <div class="col-12 p-4">
+      <h3>Transcript - Speaker Segments</h3>
+      <app-audio-transcript [segments]="segments()"></app-audio-transcript>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-12 p-4">
+      <h3>Physician Notes (SOAP)</h3>
+      <app-physician-notes [soapNote]="soapNote()"></app-physician-notes>
+    </div>
+  </div>
+</div>

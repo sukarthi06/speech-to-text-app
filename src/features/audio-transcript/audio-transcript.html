@@ -1,0 +1,10 @@
+<div class="transcript-list">
+  @for (seg of segments(); track seg.speaker) {
+    <div class="segment">
+      <span [class]="'speaker-label ' + getSpeakerClass(seg.speaker)">
+        {{ seg.speaker }}
+      </span>
+      <p class="segment-text">{{ seg.text }}</p>
+    </div>
+  }
+</div>

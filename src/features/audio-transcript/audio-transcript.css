@@ -1,0 +1,38 @@
+.transcript-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.empty-state p {
+  color: #888;
+  font-size: 14px;
+}
+
+.segment {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  background: #fff;
+}
+
+.speaker-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+
+  &.speaker-blue  { color: #185fa5; }
+  &.speaker-green { color: #3b6d11; }
+  &.speaker-amber { color: #854f0b; }
+  &.speaker-coral { color: #993c1d; }
+}
+
+.segment-text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #111;
+}
