@@ -1,0 +1,116 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: stt-scribe-app-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Log source checkout status
+        run: |
+          echo "::notice title=Checkout completed::Deploying commit $(git rev-parse --short HEAD)."
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Log Azure login status
+        run: |
+          subscription="$(az account show --query name --output tsv)"
+          echo "::notice title=Azure login completed::Authenticated to subscription: $subscription."
+
+      - name: Build and push image to ACR
+        run: |
+          az acr login --name ${{ vars.ACR_NAME }} --resource-group ${{ vars.RG_NAME }}
+          docker buildx build \
+            --build-arg CONFIGURATION=uat \
+            -t ${{ vars.ACR_LOGIN_SERVER }}/scribe-stt-app:${{ github.event.workflow_run.head_sha }} \
+            --push .
+          echo "::notice title=Container image published::Image pushed to ACR for commit ${{ github.event.workflow_run.head_sha }}."
+
+      - name: Wait for any active Container App operation
+        run: |
+          for attempt in {1..60}; do
+            state="$(az containerapp show --name stt-scribe-app --resource-group ${{ vars.RG_NAME }} --query properties.provisioningState --output tsv)"
+            case "$state" in
+              Succeeded) echo "::notice title=Container App ready::No active Container App operation."; exit 0 ;;
+              Failed) echo "::warning title=Previous operation failed::Continuing with this corrective deployment."; exit 0 ;;
+              *) echo "Container App provisioning state: $state. Waiting..."; sleep 10 ;;
+            esac
+          done
+          echo "Timed out waiting for the Container App to become ready."
+          exit 1
+
+      - name: Deploy to Container App
+        run: |
+          az containerapp update \
+            --name stt-scribe-app \
+            --resource-group ${{ vars.RG_NAME }} \
+            --image ${{ vars.ACR_LOGIN_SERVER }}/scribe-stt-app:${{ github.event.workflow_run.head_sha }}
+          echo "::notice title=Container App deployment completed::Azure accepted and completed the image update."
+
+      - name: Verify deployed revision
+        run: |
+          set -euo pipefail
+
+          app="stt-scribe-app"
+          rg="${{ vars.RG_NAME }}"
+          expected_image="${{ vars.ACR_LOGIN_SERVER }}/scribe-stt-app:${{ github.event.workflow_run.head_sha }}"
+
+          for attempt in {1..60}; do
+            app_state="$(az containerapp show \
+              --name "$app" \
+              --resource-group "$rg" \
+              --query properties.provisioningState \
+              --output tsv)"
+
+            revision="$(az containerapp show \
+              --name "$app" \
+              --resource-group "$rg" \
+              --query properties.latestReadyRevisionName \
+              --output tsv)"
+
+            if [[ "$app_state" == "Succeeded" && -n "$revision" ]]; then
+              details="$(az containerapp revision show \
+                --name "$app" \
+                --resource-group "$rg" \
+                --revision "$revision" \
+                --query '{active:properties.active,provisioning:properties.provisioningState,image:properties.template.containers[0].image}' \
+                --output json)"
+
+              echo "$details"
+
+              actual_image="$(echo "$details" | jq -r .image)"
+              provisioning="$(echo "$details" | jq -r .provisioning)"
+
+              if [[ "$actual_image" == "$expected_image" && "$provisioning" == "Provisioned" ]]; then
+                echo "::notice title=Deployment verified::Revision $revision is active, provisioned, and running the expected image."
+                exit 0
+              fi
+            fi
+
+            sleep 10
+          done
+
+          echo "Deployment verification timed out."
+          exit 1

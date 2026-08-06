@@ -8,7 +8,8 @@ RUN npm install
 
 COPY . .
 
-RUN npm run build -- --configuration development
+ARG CONFIGURATION=development
+RUN npm run build -- --configuration $CONFIGURATION
 
 # Runtime stage
 FROM nginx:alpine
