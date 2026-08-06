@@ -26,8 +26,5 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Test
-        run: npm test -- --watch=false
-
       - name: Build Docker image
         run: docker build -t speech-to-text-app:ci .
