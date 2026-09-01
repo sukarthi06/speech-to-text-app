@@ -6,12 +6,13 @@ import { TranscriptResponse, TranscriptSegment } from '../../types/transcript-se
 import { PhysicianNotes } from '../physician-notes/physician-notes';
 import { RecordingMetadata } from '../../types/audio-type';
 import { RecordingId } from '../../types/recording-type';
-import { SoapNote } from '../../types/clinical-type';
+import { SoapNote, Icd10Code } from '../../types/clinical-type';
 import { PhysicianNoteService } from '../../services/physician-note-service';
+import { Icd10Codes } from "../icd10-codes/icd10-codes";
 
 @Component({
   selector: 'app-audio-recorder',
-  imports: [AudioVisualizer, AudioTranscript, PhysicianNotes],
+  imports: [AudioVisualizer, AudioTranscript, PhysicianNotes, Icd10Codes],
   templateUrl: './audio-recorder.html',
   styleUrl: './audio-recorder.css',
 })
@@ -36,6 +37,7 @@ export class AudioRecorder implements OnInit {
   public analyser = signal<AnalyserNode | null>(null);
   public segments = signal<TranscriptSegment[]>([]);
   public soapNote = signal<SoapNote | null>(null);
+  public icd10Codes = signal<Icd10Code[] | null>(null);
 
   constructor() {
     // Initialize worker
@@ -185,15 +187,17 @@ export class AudioRecorder implements OnInit {
     try {
     await this.noteService.waitForNote(this.recordingId);
     this.soapNote.set(this.noteService.note()?.soapNote ?? null);
-  } finally {    
+    this.icd10Codes.set(this.noteService.note()?.icd10Codes ?? null);
+  } finally {
     this.isProcessingAudio.set(false);
     if(this.noteService.note() !== null){
       this.soapNote.set(this.noteService.note()?.soapNote ?? null);
+      this.icd10Codes.set(this.noteService.note()?.icd10Codes ?? null);
       console.log("Received SOAP note at:", new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
     }else{
       console.log('Physician not not available.');
-    }    
-    
+    }
+
   }
   }
 }

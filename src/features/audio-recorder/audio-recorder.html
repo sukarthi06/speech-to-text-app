@@ -43,8 +43,14 @@
   </div>
   <div class="row">
     <div class="col-12 p-4">
+      <h3>ICD-10 Codes</h3>
+      <app-icd10-codes [icd10Codes]="icd10Codes()"></app-icd10-codes>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-12 p-4">
       <h3>Physician Notes (SOAP)</h3>
       <app-physician-notes [soapNote]="soapNote()"></app-physician-notes>
     </div>
-  </div>
+  </div>  
 </div>

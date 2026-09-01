@@ -9,7 +9,13 @@ export interface SoapNote {
   plan: string;
 }
 
+export interface Icd10Code {
+  code: string;
+  description: string;
+}
+
 export interface PhysicianNote {
   physicianNoteId: { value: string };
   soapNote: SoapNote;
+  icd10Codes: Icd10Code[];
 }

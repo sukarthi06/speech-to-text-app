@@ -1,0 +1,14 @@
+@if (icd10Codes(); as codes) {
+  @if (codes.length > 0) {
+    <div class="icd10-codes">
+      @for (icd10Code of codes; track icd10Code.code) {
+        <div class="icd10-code">
+          <span class="icd10-code__code">{{ icd10Code.code }}</span>
+          <span class="icd10-code__description">{{ icd10Code.description }}</span>
+        </div>
+      }
+    </div>
+  } @else {
+    <p class="icd10-codes__empty">No codes found</p>
+  }
+}
