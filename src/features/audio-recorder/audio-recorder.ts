@@ -1,11 +1,10 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { AudioVisualizer } from '../audio-visualizer/audio-visualizer';
 import { environment } from '../../environments/environment';
 import { AudioTranscript } from '../audio-transcript/audio-transcript';
 import { TranscriptResponse, TranscriptSegment } from '../../types/transcript-segment';
 import { PhysicianNotes } from '../physician-notes/physician-notes';
 import { RecordingMetadata } from '../../types/audio-type';
-import { RecordingId } from '../../types/recording-type';
 import { SoapNote, Icd10Code } from '../../types/clinical-type';
 import { PhysicianNoteService } from '../../services/physician-note-service';
 import { Icd10Codes } from "../icd10-codes/icd10-codes";
@@ -16,22 +15,34 @@ import { Icd10Codes } from "../icd10-codes/icd10-codes";
   templateUrl: './audio-recorder.html',
   styleUrl: './audio-recorder.css',
 })
-export class AudioRecorder implements OnInit {
+export class AudioRecorder implements OnInit, OnDestroy {
 
   private audioContext: AudioContext | null = null;  
   private source: MediaStreamAudioSourceNode | null = null;
   private node: AudioWorkletNode | null = null;
   private stream: MediaStream | null = null;
   private chunkWorker: Worker;
+  private recordingId: string | null = null;
+  private keepAlive?: ReturnType<typeof setInterval>;
 
   // Array to store all audio chunks
   allChunks: Float32Array[] = [];
   private chunkCounter = 0;
-
-  private recordingId: string | null = null;
+  
   protected readonly noteService = inject(PhysicianNoteService);
 
-  public isProcessingAudio = signal(false);  
+  // Single source of truth for the recorder lifecycle.
+  //   idle       -> nothing recorded yet
+  //   recording  -> capturing audio
+  //   paused     -> capture suspended, can resume or stop
+  //   processing -> Stop pressed, waiting for the physician note (spinner)
+  //   done       -> note received OR not; everything locked
+  public phase = signal<'idle' | 'recording' | 'paused' | 'processing' | 'done'>('idle');
+
+  // Each button reads exactly one of these.
+  public canStart = computed(() => this.phase() === 'idle' || this.phase() === 'paused');
+  public canPause = computed(() => this.phase() === 'recording');
+  public canStop = computed(() => this.phase() === 'recording' || this.phase() === 'paused');
 
   public transcript = signal('');
   public analyser = signal<AnalyserNode | null>(null);
@@ -81,9 +92,15 @@ export class AudioRecorder implements OnInit {
       }
     };
   }
-
+  
   ngOnInit() {    
     this.chunkWorker.postMessage({ type: 'init', websocketUrl: environment.websocketUrl });
+  }
+
+  ngOnDestroy(): void {
+    clearInterval(this.keepAlive);
+    this.stream?.getTracks().forEach(t => t.stop());
+    this.audioContext?.close();
   }
 
   processAudioChunk(chunk: Float32Array) {    
@@ -92,6 +109,17 @@ export class AudioRecorder implements OnInit {
   }
 
   async startAudio() {
+
+    // Resume from a paused capture instead of starting a new one.
+    if (this.phase() === 'paused') {
+      clearInterval(this.keepAlive);
+      await this.audioContext?.resume();
+      this.phase.set('recording');
+      return;
+    }
+
+    if (this.phase() !== 'idle') return;
+    this.phase.set('recording');
 
     console.log("Recording started at:", new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     this.audioContext = new AudioContext();
@@ -140,13 +168,22 @@ export class AudioRecorder implements OnInit {
     this.source.connect(analyserNode); // Connect to analyser for visualizer
   }
 
+  async pauseAudio(): Promise<void> {
+    if (this.phase() !== 'recording') return;
+    await this.audioContext?.suspend();
+    this.phase.set('paused');
+    this.keepAlive = setInterval(
+    () => this.chunkWorker.postMessage({ type: 'ping' }), 30000); //30 seconds
+  }
+
   async stopAudio(): Promise<void> {
 
     console.log('Audio stopped. Waiting 3 seconds for workers to finish processing...');
-    
-    this.isProcessingAudio.set(true);
+
+    clearInterval(this.keepAlive);
+    this.phase.set('processing');
     //this.recordingId =  { value: '6f4bb276-73b4-4572-9f05-5edb28960ae5' };
-    
+
     // Stop audio immediately
     if (this.source) this.source.disconnect();
     if (this.node) this.node.disconnect();
@@ -164,14 +201,14 @@ export class AudioRecorder implements OnInit {
       this.node = null;
       this.stream = null;
       this.analyser.set(null);
-      
+
       // Terminate worker after processing
       //this.chunkWorker.postMessage({ type: 'close' });
       //this.chunkWorker.terminate();
-      
+
       this.chunkCounter = 0;
       console.log('Audio stopped');
-      
+
       console.log('Total chunks:', this.allChunks.length);
       this.allChunks = [];
     }, 3000);
@@ -181,23 +218,24 @@ export class AudioRecorder implements OnInit {
 
     if (!this.recordingId) {
       this.noteService.error.set('No active recording to fetch a note for.');
-      this.isProcessingAudio.set(false);
+      this.phase.set('done');
       return;
     }
     try {
-    await this.noteService.waitForNote(this.recordingId);
-    this.soapNote.set(this.noteService.note()?.soapNote ?? null);
-    this.icd10Codes.set(this.noteService.note()?.icd10Codes ?? null);
-  } finally {
-    this.isProcessingAudio.set(false);
-    if(this.noteService.note() !== null){
+      await this.noteService.waitForNote(this.recordingId);
       this.soapNote.set(this.noteService.note()?.soapNote ?? null);
       this.icd10Codes.set(this.noteService.note()?.icd10Codes ?? null);
-      console.log("Received SOAP note at:", new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
-    }else{
-      console.log('Physician not not available.');
-    }
+    } finally {
 
-  }
+      this.phase.set('done');
+      if (this.noteService.note() !== null) {
+        this.soapNote.set(this.noteService.note()?.soapNote ?? null);
+        this.icd10Codes.set(this.noteService.note()?.icd10Codes ?? null);
+        console.log("Received SOAP note at:", new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+      } else {
+        console.log('Physician not not available.');
+      }
+
+    }
   }
 }

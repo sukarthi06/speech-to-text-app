@@ -23,12 +23,15 @@ addEventListener('message', ({ data }) => {
     case 'send':
       socketClient.send(data.chunk);
       break;
+    case 'ping':
+      socketClient.ping();
+      break;
     case 'start':
       socketClient.start();
       break;
     case 'stop':
       socketClient.stop();
-      break;
+      break;      
     case 'close':
       //socketClient?.close();
       //socketClient = null;

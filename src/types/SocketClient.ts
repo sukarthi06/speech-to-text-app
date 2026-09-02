@@ -35,6 +35,12 @@ export class SocketClient {
         this.socket.send(JSON.stringify(metaData));
     }
 
+    ping() {
+        if (this.socket.readyState === WebSocket.OPEN) {
+            this.socket.send(JSON.stringify({ type: 'ping' }));
+        }
+    }
+
     stop() {
         this.socket.send(JSON.stringify({ type: 'stop' }));
     }
