@@ -1,10 +1,11 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { TranscriptSegment } from '../../types/transcript-segment';
 
 @Component({
   selector: 'app-audio-transcript',
   imports: [],
   templateUrl: './audio-transcript.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './audio-transcript.css',
 })
 export class AudioTranscript {

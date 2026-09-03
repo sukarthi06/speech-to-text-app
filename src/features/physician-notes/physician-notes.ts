@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { SoapNote } from '../../types/clinical-type';
 
 export interface SoapNoteSection {
@@ -12,6 +12,7 @@ export interface SoapNoteSection {
   selector: 'app-physician-notes',
   imports: [CommonModule],
   templateUrl: './physician-notes.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './physician-notes.css',
 })
 export class PhysicianNotes {

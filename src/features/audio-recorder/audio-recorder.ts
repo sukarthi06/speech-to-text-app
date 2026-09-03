@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnDestroy, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { AudioVisualizer } from '../audio-visualizer/audio-visualizer';
 import { environment } from '../../environments/environment';
 import { AudioTranscript } from '../audio-transcript/audio-transcript';
@@ -13,6 +13,7 @@ import { Icd10Codes } from "../icd10-codes/icd10-codes";
   selector: 'app-audio-recorder',
   imports: [AudioVisualizer, AudioTranscript, PhysicianNotes, Icd10Codes],
   templateUrl: './audio-recorder.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './audio-recorder.css',
 })
 export class AudioRecorder implements OnInit, OnDestroy {
