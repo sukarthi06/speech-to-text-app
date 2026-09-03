@@ -1,9 +1,10 @@
-import { AfterViewInit, Component, ElementRef, input, NgZone, OnDestroy, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, input, NgZone, OnDestroy, signal, viewChild, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'app-audio-visualizer',
   imports: [],
   templateUrl: './audio-visualizer.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './audio-visualizer.css',
 })
 export class AudioVisualizer implements AfterViewInit, OnDestroy {
