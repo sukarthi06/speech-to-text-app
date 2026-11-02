@@ -128,7 +128,8 @@
               "buildTarget": "voice-text-app:build:development"
             },
             "local": {
-              "buildTarget": "voice-text-app:build:local"
+              "buildTarget": "voice-text-app:build:local",
+              "proxyConfig": "proxy.conf.json"
             },
             "uat": {
               "buildTarget": "voice-text-app:build:uat"

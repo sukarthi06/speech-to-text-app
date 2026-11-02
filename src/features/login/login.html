@@ -1,0 +1,60 @@
+<app-header />
+
+<main class="login-page">
+  <div class="logo" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="9" y="2" width="6" height="12" rx="3" />
+      <path d="M5 11a7 7 0 0 0 14 0M12 18v4" />
+    </svg>
+  </div>
+  <h1 class="h4 fw-bold mt-3 mb-4">AI Medical Scribe</h1>
+
+  <section class="card login-card p-4">
+    <h2 class="h6 fw-bold mb-1">Sign in</h2>
+    <p class="small text-secondary mb-3">Use your clinic credentials to continue</p>
+
+    <form [formRoot]="loginForm" novalidate>
+      <div class="mb-3">
+        <label for="email" class="form-label small">Email</label>
+        <input id="email" type="email" class="form-control" autocomplete="username"
+               placeholder="name@clinic.org" [formField]="loginForm.email" />
+        @if (loginForm.email().touched() && loginForm.email().invalid()) {
+          <div class="small text-danger mt-1">Enter a valid email address</div>
+        }
+      </div>
+
+      <div class="mb-3">
+        <label for="password" class="form-label small">Password</label>
+        <input id="password" type="password" class="form-control" autocomplete="current-password"
+               [formField]="loginForm.password" />
+        @if (loginForm.password().touched() && loginForm.password().invalid()) {
+          <div class="small text-danger mt-1">Password is required</div>
+        }
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="form-check">
+          <input id="remember" type="checkbox" class="form-check-input" />
+          <label for="remember" class="form-check-label small">Remember me</label>
+        </div>
+        <button type="button" class="btn btn-link btn-sm p-0">Forgot password?</button>
+      </div>
+
+      @if (status() === 'error') {
+        <div class="alert alert-danger py-2 small" role="alert">Invalid email or password</div>
+      }
+
+      <button type="submit" class="btn btn-primary w-100" [disabled]="status() === 'submitting'">
+        {{ status() === 'submitting' ? 'Signing in…' : 'Sign In' }}
+      </button>
+    </form>
+
+    <div class="divider my-3"><span>or</span></div>
+
+    <button type="button" class="btn btn-outline-secondary w-100">Continue with Clinic SSO</button>
+  </section>
+
+  <p class="small text-secondary mt-3">Need access? Contact your clinic administrator</p>
+</main>
+
+<app-footer />
