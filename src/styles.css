@@ -1,1 +1,21 @@
 /* You can add global styles to this file, and also import other style files */
+:root {
+  --brand-blue: #0b2e59;
+  --brand-blue-hover: #082343;
+  --page-bg: #f7f8fa;
+}
+
+body {
+  background: var(--page-bg);
+}
+
+.btn-primary {
+  --bs-btn-bg: var(--brand-blue);
+  --bs-btn-border-color: var(--brand-blue);
+  --bs-btn-hover-bg: var(--brand-blue-hover);
+  --bs-btn-hover-border-color: var(--brand-blue-hover);
+  --bs-btn-active-bg: var(--brand-blue-hover);
+  --bs-btn-active-border-color: var(--brand-blue-hover);
+  --bs-btn-disabled-bg: var(--brand-blue);
+  --bs-btn-disabled-border-color: var(--brand-blue);
+}

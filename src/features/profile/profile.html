@@ -1,0 +1,60 @@
+<app-header />
+
+<main class="profile-page container py-4">
+  @switch (user.status()) {
+    @case ('loading') {
+      <p class="text-secondary">Loading your details…</p>
+    }
+    @case ('error') {
+      <div class="alert alert-danger" role="alert">Unable to load your details. Please try again.</div>
+    }
+  }
+
+  @if (user.hasValue()) {
+    @let u = user.value();
+
+    <div class="card p-4">
+      <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+          <h1 class="h4 fw-bold mb-1">{{ u.firstName }} {{ u.middleName }} {{ u.lastName }}</h1>
+          <p class="text-secondary mb-0">{{ u.email }}</p>
+        </div>
+        <span class="badge" [class]="u.userStatus === 'Active' ? 'text-bg-success' : 'text-bg-secondary'">
+          {{ u.userStatus }}
+        </span>
+      </div>
+
+      <dl class="row mb-0">
+        <dt class="col-sm-3">License No</dt>
+        <dd class="col-sm-9">{{ u.licenseNo ?? '—' }}</dd>
+
+        <dt class="col-sm-3">Date of birth</dt>
+        <dd class="col-sm-9">{{ u.dob ? (u.dob | date: 'mediumDate') : '—' }}</dd>
+
+        <dt class="col-sm-3">Sex</dt>
+        <dd class="col-sm-9">{{ u.sex ?? '—' }}</dd>
+
+        <dt class="col-sm-3">Phone</dt>
+        <dd class="col-sm-9">{{ u.phone1 ?? '—' }}</dd>
+
+        <dt class="col-sm-3">Organization</dt>
+        <dd class="col-sm-9">{{ u.organization?.name ?? '—' }}</dd>
+
+        <dt class="col-sm-3">Address</dt>
+        <dd class="col-sm-9">
+          @if (u.address; as a) {
+            {{ a.addressLine1 }}@if (a.addressLine2) {, {{ a.addressLine2 }}}<br />
+            {{ a.city }}, {{ a.state }} {{ a.zip }}, {{ a.country }}
+          } @else {
+            —
+          }
+        </dd>
+
+        <dt class="col-sm-3">Roles</dt>
+        <dd class="col-sm-9">{{ u.roles.length ? u.roles.join(', ') : '—' }}</dd>
+      </dl>
+    </div>
+  }
+</main>
+
+<app-footer />

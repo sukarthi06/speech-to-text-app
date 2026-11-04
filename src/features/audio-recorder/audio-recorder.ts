@@ -234,7 +234,7 @@ export class AudioRecorder implements OnInit, OnDestroy {
         this.icd10Codes.set(this.noteService.note()?.icd10Codes ?? null);
         console.log("Received SOAP note at:", new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
       } else {
-        console.log('Physician not not available.');
+        console.log('Physician note not available.');
       }
 
     }
